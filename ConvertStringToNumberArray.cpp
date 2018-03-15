@@ -226,6 +226,7 @@ char ConvertStringToNumberArray::ConvertToDecimal(int* _internal_num, int& _inte
 	}	
 	return SUCCESS;
 }
+
 size_t ConvertStringToNumberArray::Convert_String_to_Decimal_vector(int* _str, int& _str_length, char* _result_buf, int& _result_buf_Length)
 {
 	vector<int> bignumberstr;
@@ -240,11 +241,11 @@ size_t ConvertStringToNumberArray::Convert_String_to_Decimal_vector(int* _str, i
 	}
 	return str_pos;
 }
+
 int ConvertStringToNumberArray::ToDecimal(int* _internal_num, int& _internal_num_length, char*& _result_buf, int& _result_buf_Length)
 {
 	vector<int> binary_vector;
 	binary_vector.assign(&_internal_num[0], &_internal_num[_internal_num_length]);
-	cout << "binarrrrrrrrrrrrrrrrry" << endl;
 	//local variables
 	char temp_hex_char = 0;
 	int shift_counter = 0;
@@ -276,7 +277,8 @@ int ConvertStringToNumberArray::ToDecimal(int* _internal_num, int& _internal_num
 		//
 		if (whole_num_bcd_vector[decimal_digit_place].front())
 		{
-			whole_num_bcd_vector.push_back(digit_bcd_vector);//pushing back zeros in packs of 4 corresponding to the expected bcd decimals outputed
+			//pushing back zeros in packs of 4 corresponding to the expected bcd decimals outputed
+			whole_num_bcd_vector.push_back(digit_bcd_vector);
 			decimal_digit_place++;
 		}
 	}
@@ -300,17 +302,17 @@ int ConvertStringToNumberArray::ToDecimal(int* _internal_num, int& _internal_num
 		converted_string.push_back(temp_hex_char);
 		temp_hex_char = 0;
 	}
-	//this->BigNumberStr = converted_string;
+	//adding the null character '\0' to the end of the char array
+	converted_string.push_back(0);
 
-	//_result_buf = new char[converted_string.size()];
 	if (_result_buf != NULL) 
 	{
 		memmove(_result_buf, converted_string.data(), (converted_string.size() * sizeof(char)));
 	}
 	_result_buf_Length = static_cast<int>( converted_string.size() );
-	//converted_string = Convert_String_to_Decimal_vector(_result_buf, _result_buf_Length);
 	return _result_buf_Length;
 }
+
 void ConvertStringToNumberArray::update_bcd_digit_value_coressponding_to_its_current_value(vector< vector<char> >& whole_num_bcd_vector)
 {
 	for (size_t whole_size = 0; whole_size < whole_num_bcd_vector.size(); whole_size++)
@@ -318,9 +320,9 @@ void ConvertStringToNumberArray::update_bcd_digit_value_coressponding_to_its_cur
 		char temp_hex_char = 0;
 		//check the current digit if >4 ? add 3 : move on()
 		temp_hex_char = (whole_num_bcd_vector[whole_size][3]) +
-			(whole_num_bcd_vector[whole_size][2] * 2) +
-			(whole_num_bcd_vector[whole_size][1] * 4) +
-			(whole_num_bcd_vector[whole_size][0] * 8);
+						(whole_num_bcd_vector[whole_size][2] * 2) +
+						(whole_num_bcd_vector[whole_size][1] * 4) +
+						(whole_num_bcd_vector[whole_size][0] * 8);
 		if (temp_hex_char > 4)
 		{
 			//	temp_hex_char += 3;
@@ -375,14 +377,92 @@ void ConvertStringToNumberArray::shift_whole_num_bcd_vector_left(vector< vector<
 	}
 }
 /////////////////////////////////////////////////////////////////////
+
 // convert from big number's internal type to hex
 char ConvertStringToNumberArray::ConvertToHex(int*_internal_num, int& _internal_num_length, char* _result_buf, int& _result_buf_Length)
 {
 	cout << __FUNCTION__ << endl;
+
+	int conversion_length = ToHex( _internal_num, _internal_num_length, _result_buf, _result_buf_Length);
+
+	if (_result_buf_Length == NULL)
+	{
+		_result_buf_Length = conversion_length;
+	}
+	else if (_result_buf_Length < conversion_length)
+	{
+		_result_buf_Length = conversion_length;
+		return CONVERSION_ERROR;
+	}
+	else
+	{
+		ToHex(_internal_num, _internal_num_length, _result_buf, _result_buf_Length);
+	}
 	return SUCCESS;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+int ConvertStringToNumberArray::ToHex(int*_internal_num, int& _internal_num_length, char* _result_buf, int& _result_buf_Length)
+{
+	vector<int> binary_vector;
+	binary_vector.assign(&_internal_num[0], &_internal_num[_internal_num_length]);
+	//
+	string converted_string;
+	size_t remaining_vector_elements;//must be >=4
+	char temp_hex_char = 0;
+	//
+	for (size_t vector_pos = 0; vector_pos < binary_vector.size(); vector_pos += 4)
+	{
+		remaining_vector_elements = binary_vector.size() - vector_pos;
+		if (remaining_vector_elements < 4)
+		{
+			for (size_t i = 0; i < remaining_vector_elements; i++)
+			{
+				if (i == 0)
+				{
+					temp_hex_char += (binary_vector[vector_pos]);
+				}
+				else
+				{
+					temp_hex_char += (binary_vector[vector_pos + i] * (i * 2));
+				}
+
+			}
+			vector_pos = binary_vector.size();
+		}
+		else
+		{
+			temp_hex_char = (binary_vector[vector_pos + 0]) +
+				(binary_vector[vector_pos + 1] * 2) +
+				(binary_vector[vector_pos + 2] * 4) +
+				(binary_vector[vector_pos + 3] * 8);
+		}
+		//
+		if (temp_hex_char >= 0 && temp_hex_char < 10)
+		{
+			temp_hex_char += '0';
+		}
+		else
+		{
+			temp_hex_char = (temp_hex_char - 10) + 'A';
+		}
+		//
+		converted_string.insert(converted_string.begin(), temp_hex_char);
+		temp_hex_char = 0;
+	}
+
+	//return converted_string;
+	//adding the null character '\0' to the end of the char array
+	converted_string.push_back(0);
+
+	if (_result_buf != NULL)
+	{
+		memmove(_result_buf, converted_string.data(), (converted_string.size() * sizeof(char)));
+	}
+	_result_buf_Length = static_cast<int>(converted_string.size());
+	return _result_buf_Length;
+}
 
 //Divide a big uint number by 2 takes int vector and quotient vector to be filled and returns the result remainder
 int ConvertStringToNumberArray::Divide_Decimal_vector_by_Two(vector<int>& decimal_array/*divisor*/, vector<int>& quotient)

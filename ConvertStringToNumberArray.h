@@ -30,6 +30,7 @@ private:
 	char ToInternalFromBin(const char * _str, int _str_num_length, int *& _result_buf, int & _result_buf_length);
 	
 	char ConvertToHex(int* _internal_num , int &_internal_num_length ,  char* _result_buf , int& _result_buf_Length);
+	int ToHex(int*_internal_num, int& _internal_num_length, char* _result_buf, int& _result_buf_Length);
 	char ConvertToDecimal(int* _internal_num , int & _internal_num_length ,  char*& _result_buf , int& _result_buf_Length);
 		int ToDecimal(int* _internal_num, int& _internal_num_length, char*& _result_buf, int& _result_buf_Length);
 		void update_bcd_digit_value_coressponding_to_its_current_value(vector< vector<char> >& whole_num_bcd_vector);
