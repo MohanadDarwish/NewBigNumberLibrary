@@ -41,13 +41,14 @@ char ConvertStringToByteArray::ToInternalFromBin(const char * _str, int _str_num
 	int result = 0;
 	int no_of_ints = 1;
 	int no_of_bits = 0;
-	for (int i = _str_num_length ; i >0 ; i--)
+
+	for (int i = _str_num_length; i > 0; i--)
 	{
-		cout << _str[i-1];
-		temp = ( (_str[i-1]-'0') << no_of_bits );
+		cout << _str[i - 1];
+		temp = ((_str[i - 1] - '0') << no_of_bits);
 		result |= temp;
 		no_of_bits++;
-		if( (no_of_bits==32) && (no_of_bits!=0) || i==1 )
+		if ((no_of_bits == 32) && (no_of_bits != 0) || i == 1)
 		{
 			int_vector.push_back(result);
 			no_of_ints++;
@@ -55,10 +56,13 @@ char ConvertStringToByteArray::ToInternalFromBin(const char * _str, int _str_num
 			result = 0;
 		}
 	}
+
 	cout << endl;
+
 	_result_buf = new int[int_vector.size()];
 	memmove(_result_buf, int_vector.data(), int_vector.size() * sizeof(int));
 	_result_buf_length = static_cast<int>(int_vector.size());
+
 	return SUCCESS;
 }
 
@@ -82,9 +86,9 @@ char ConvertStringToByteArray::ToInternalFromDecimal(const char * _str, int _str
 	vector<int> quotient;
 	vector<unsigned char> byte_vector;
 	unsigned char remainder = 0;
-	while ( (dividend.size() >= 1) && (dividend[0]!=0) )
+	while ((dividend.size() >= 1) && (dividend[0] != 0))
 	{
-		remainder = LongDivsion(dividend, quotient , 256);
+		remainder = LongDivsion(dividend, quotient, 256);
 		byte_vector.push_back(remainder);
 		dividend = quotient;
 		quotient.clear();
@@ -92,19 +96,19 @@ char ConvertStringToByteArray::ToInternalFromDecimal(const char * _str, int _str
 	vector<int>internal_int_vector;
 	int single_int = 0;
 	int No_of_Bytes = 0;
-	for (int i = 0 ; i < byte_vector.size() ; i++)
+	for (int i = 0; i < byte_vector.size(); i++)
 	{
-		single_int = single_int | byte_vector[ i ];
+		single_int = single_int | byte_vector[i];
 		No_of_Bytes++;
-		if (No_of_Bytes == 4) 
+		if (No_of_Bytes == 4)
 		{
 			internal_int_vector.push_back(single_int);
 			No_of_Bytes = 0;
 			single_int = 0;
 		}
-		if ( i == byte_vector.size()-1 ) 
-		{ 
-			break; 
+		if (i == byte_vector.size() - 1)
+		{
+			break;
 		}
 		single_int = single_int << 8;
 	}
@@ -125,108 +129,119 @@ char ConvertStringToByteArray::ToInternalFromHex(const char * _str, int _str_num
 	vector<unsigned char> byte_vector;
 	bool least_nibble = true;
 	unsigned char single_byte = 0;
+	int single_int = 0;
+	int no_of_bytes = 0;
+	unsigned  char character_range_start = 0;
 	// need to check if the current digit is a vaiable hex digit
 	for (int str_pos = _str_num_length; str_pos > 0; str_pos--)
 	{
 		if (_str[str_pos - 1] >= '0' && _str[str_pos - 1] <= '9')
 		{
-			if (least_nibble) 
-			{
-				single_byte |= (_str[str_pos - 1] - '0') ;
-				least_nibble = !least_nibble;
-				if (str_pos - 1 == 0) 
-				{
-					byte_vector.push_back(single_byte);
-				}
-			}
-			else
-			{
-				single_byte |= ( (_str[str_pos - 1] - '0') << 4 );
-				least_nibble = !least_nibble;
-				byte_vector.push_back(single_byte);
-				single_byte = 0;
-			}	
+			character_range_start = '0';
 		}
 		else if ((_str[str_pos - 1] >= 'A' && _str[str_pos - 1] <= 'F'))
 		{
-			if (least_nibble)
-			{
-				single_byte |= (_str[str_pos - 1] - 'A');
-				least_nibble = !least_nibble;
-				if (str_pos - 1 == 0)
-				{
-					byte_vector.push_back(single_byte);
-				}
-			}
-			else
-			{
-				single_byte |= ((_str[str_pos - 1] - 'A') << 4);
-				least_nibble = !least_nibble;
-				byte_vector.push_back(single_byte);
-				single_byte = 0;
-			}
+			character_range_start = 'A';
 		}
 		else if (_str[str_pos - 1] >= 'a' && _str[str_pos - 1] <= 'f')
 		{
-			if (least_nibble)
-			{
-				single_byte |= (_str[str_pos - 1] - 'a');
-				least_nibble = !least_nibble;
-				if (str_pos - 1 == 0)
-				{
-					byte_vector.push_back(single_byte);
-				}
-			}
-			else
-			{
-				single_byte |= ((_str[str_pos - 1] - 'a') << 4);
-				least_nibble = !least_nibble;
-				byte_vector.push_back(single_byte);
-				single_byte = 0;
-			}
+			character_range_start = 'a';
 		}
-		else
+		else 
 		{
-			cout << "Error: Wrong Hex Digit." << endl;
 			return CONVERSION_ERROR;
 		}
+
+		single_int |= _str[str_pos - 1]- character_range_start;
+		cout << single_int<<endl;
+		no_of_bytes++;
+		if (no_of_bytes == 8)
+		{
+			hex_vector.push_back(single_int);
+			single_int = 0;
+			no_of_bytes = 0;
+		}
+		single_int <<= 4;
+		//if (_str[str_pos - 1] >= '0' && _str[str_pos - 1] <= '9')
+		//{
+		//	if (least_nibble) 
+		//	{
+		//		single_byte |= (_str[str_pos - 1] - '0') ;
+		//		least_nibble = !least_nibble;
+		//		if (str_pos - 1 == 0) 
+		//		{
+		//			byte_vector.push_back(single_byte);
+		//		}
+		//	}
+		//	else
+		//	{
+		//		single_byte |= ( (_str[str_pos - 1] - '0') << 4 );
+		//		least_nibble = !least_nibble;
+		//		byte_vector.push_back(single_byte);
+		//		single_byte = 0;
+		//	}	
+		//}
+		//else if ((_str[str_pos - 1] >= 'A' && _str[str_pos - 1] <= 'F'))
+		//{
+		//	if (least_nibble)
+		//	{
+		//		single_byte |= (_str[str_pos - 1] - 'A');
+		//		least_nibble = !least_nibble;
+		//		if (str_pos - 1 == 0)
+		//		{
+		//			byte_vector.push_back(single_byte);
+		//		}
+		//	}
+		//	else
+		//	{
+		//		single_byte |= ((_str[str_pos - 1] - 'A') << 4);
+		//		least_nibble = !least_nibble;
+		//		byte_vector.push_back(single_byte);
+		//		single_byte = 0;
+		//	}
+		//}
+		//else if (_str[str_pos - 1] >= 'a' && _str[str_pos - 1] <= 'f')
+		//{
+		//	if (least_nibble)
+		//	{
+		//		single_byte |= (_str[str_pos - 1] - 'a');
+		//		least_nibble = !least_nibble;
+		//		if (str_pos - 1 == 0)
+		//		{
+		//			byte_vector.push_back(single_byte);
+		//		}
+		//	}
+		//	else
+		//	{
+		//		single_byte |= ((_str[str_pos - 1] - 'a') << 4);
+		//		least_nibble = !least_nibble;
+		//		byte_vector.push_back(single_byte);
+		//		single_byte = 0;
+		//	}
+		//}
+		//else
+		//{
+		//	cout << "Error: Wrong Hex Digit." << endl;
+		//	return CONVERSION_ERROR;
+		//}
 	}
 
-	vector<int>internal_int_vector;
-	int single_int = 0;
-	int No_of_Bytes = 0;
-	for (int i = 0; i < byte_vector.size(); i++)
-	{
-		single_int = single_int | byte_vector[i];
-		No_of_Bytes++;
-		if (No_of_Bytes == 4)
-		{
-			internal_int_vector.push_back(single_int);
-			No_of_Bytes = 0;
-			single_int = 0;
-		}
-		if (i == byte_vector.size() - 1)
-		{
-			internal_int_vector.push_back(single_int);
-			break;
-		}
-		single_int = single_int << 8;
-	}
 	//removing extra zeroes generated on the left of the number 0011 -> 11 
-	for (size_t i = internal_int_vector.size(); i > 1; i--)
+	for (size_t i = hex_vector.size(); i > 1; i--)
 	{
-		if (internal_int_vector[i - 1] == 0)
+		if (hex_vector[i - 1] == 0)
 		{
-			internal_int_vector.pop_back();
+			hex_vector.pop_back();
 		}
 		else
 		{
 			break;
 		}
 	}
-	_result_buf = new int[internal_int_vector.size()];
-	memmove(_result_buf, internal_int_vector.data(), internal_int_vector.size() * sizeof(int));
-	_result_buf_length = static_cast<int>(internal_int_vector.size());
+	
+	_result_buf = new int[hex_vector.size()];
+	memmove(_result_buf, hex_vector.data(), hex_vector.size() * sizeof(int));
+	_result_buf_length = static_cast<int>(hex_vector.size());
 	return SUCCESS;
 }
 
@@ -281,11 +296,11 @@ char ConvertStringToByteArray::ConvertToBin(int* _internal_num, int& _internal_n
 			result_buf.erase(result_buf.begin());
 			pos++;
 		}
-		for (int j = 0; j < result_buf.size(); j++)
-		{
-			_result_buf[j] = result_buf[j];
-		}
-
+		//for (int j = 0; j < result_buf.size(); j++)
+		//{
+		//	_result_buf[j] = result_buf[j];
+		//}
+		memmove( _result_buf , result_buf.data() , result_buf.size()*sizeof(char) );
 		_result_buf_Length = result_buf.size();
 		return SUCCESS;
 	}
