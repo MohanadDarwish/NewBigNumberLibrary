@@ -32,6 +32,7 @@ public:
 	void ConvertToInternalByteArray(const char* _str, int & _str_length, int* & _result_buf, int& _buf_Length, CONVERT_TYPES _type);
 
 	void Print_Internal_data(void);
+	void Print_Internal_byte_data(void);
 
 private:
 	//this internal data should holds values of 1s or 0s each 1/0 is in an int

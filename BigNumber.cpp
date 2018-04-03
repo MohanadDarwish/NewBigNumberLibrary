@@ -6,6 +6,9 @@ BigNumber::BigNumber()
 	cout << __FUNCTION__ << endl;
 	internal_data = NULL;
 	internal_data_length = 0;
+	
+	internal_byte_data = NULL;
+	internal_byte_data_length = 0;
 }
 
 BigNumber::BigNumber(const char * _str , int& _str_length ,CONVERT_TYPES _type)
@@ -26,6 +29,11 @@ BigNumber::~BigNumber()
 		delete[] internal_data;
 		internal_data = NULL;
 	}
+	if (internal_byte_data)
+	{
+		delete[] internal_byte_data;
+		internal_byte_data = NULL;
+	}
 }
 
 void BigNumber::Print_Internal_data(void)
@@ -39,7 +47,18 @@ void BigNumber::Print_Internal_data(void)
 	cout << endl;
 	cout << "============================" << endl;
 }
+void BigNumber::Print_Internal_byte_data(void)
+{
+	cout << __FUNCTION__ << endl;
+	cout << "internal_byte_data_size:= " << internal_byte_data_length << endl;
+	for (int i = 0; i < internal_byte_data_length; i++)
+	{
+		printf("%x\n", this->internal_byte_data[i]);
 
+	}
+	cout << endl;
+	cout << "============================" << endl;
+}
 void BigNumber::ConvertToInternalNumberArray(const char* _str, int & _str_length, int* & _result_buf, int& _buf_Length, CONVERT_TYPES _type)
 {
 	cout << __FUNCTION__ << endl;

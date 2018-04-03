@@ -39,26 +39,28 @@ char ConvertStringToByteArray::ToInternalFromBin(const char * _str, int _str_num
 	vector<int> int_vector;
 	int temp = 0;
 	int result = 0;
+	unsigned int single_int = 0;
 	int no_of_ints = 1;
 	int no_of_bits = 0;
+	int current_bit = 0;
 
-	for (int i = _str_num_length; i > 0; i--)
+	for (int str_pos = _str_num_length; str_pos > 0 ; str_pos--)
 	{
-		cout << _str[i - 1];
-		temp = ((_str[i - 1] - '0') << no_of_bits);
-		result |= temp;
+		current_bit = _str[str_pos - 1] - '0';
+		cout << _str[str_pos - 1];
+		//current_bit = current_bit << (31 - no_of_bits);
+		current_bit = current_bit << (no_of_bits);
+		single_int = single_int | current_bit;	
 		no_of_bits++;
-		if ((no_of_bits == 32) && (no_of_bits != 0) || i == 1)
+		if (no_of_bits == 32 || str_pos == 1)
 		{
-			int_vector.push_back(result);
-			no_of_ints++;
+			int_vector.push_back(single_int);
+			single_int = 0;
 			no_of_bits = 0;
-			result = 0;
+			cout << endl;
 		}
 	}
-
 	cout << endl;
-
 	_result_buf = new int[int_vector.size()];
 	memmove(_result_buf, int_vector.data(), int_vector.size() * sizeof(int));
 	_result_buf_length = static_cast<int>(int_vector.size());
@@ -98,7 +100,7 @@ char ConvertStringToByteArray::ToInternalFromDecimal(const char * _str, int _str
 	int No_of_Bytes = 0;
 	for (int i = 0; i < byte_vector.size(); i++)
 	{
-		single_int = single_int | byte_vector[i];
+		single_int = single_int | (byte_vector[i]<<(No_of_Bytes*8));
 		No_of_Bytes++;
 		if (No_of_Bytes == 4)
 		{
@@ -110,15 +112,11 @@ char ConvertStringToByteArray::ToInternalFromDecimal(const char * _str, int _str
 		{
 			break;
 		}
-		single_int = single_int << 8;
 	}
-
 	cout << "result of ConvertStringToNumberArray::ConvertToInternal: " << endl;
-
 	_result_buf = new int[internal_int_vector.size()];
 	memmove(_result_buf, internal_int_vector.data(), internal_int_vector.size() * sizeof(int));
 	_result_buf_length = static_cast<int>(internal_int_vector.size());
-
 	return SUCCESS;
 }
 
@@ -126,11 +124,8 @@ char ConvertStringToByteArray::ToInternalFromHex(const char * _str, int _str_num
 {
 	cout << __FUNCTION__ << endl;
 	vector<int> hex_vector;
-	vector<unsigned char> byte_vector;
-	bool least_nibble = true;
-	unsigned char single_byte = 0;
-	int single_int = 0;
-	int no_of_bytes = 0;
+	unsigned int single_int = 0;
+	int no_of_nibbles = 0;
 	unsigned  char character_range_start = 0;
 	// need to check if the current digit is a vaiable hex digit
 	for (int str_pos = _str_num_length; str_pos > 0; str_pos--)
@@ -141,89 +136,30 @@ char ConvertStringToByteArray::ToInternalFromHex(const char * _str, int _str_num
 		}
 		else if ((_str[str_pos - 1] >= 'A' && _str[str_pos - 1] <= 'F'))
 		{
-			character_range_start = 'A';
+			character_range_start = 'A'-10;
 		}
 		else if (_str[str_pos - 1] >= 'a' && _str[str_pos - 1] <= 'f')
 		{
-			character_range_start = 'a';
+			character_range_start = 'a'-10;
 		}
 		else 
 		{
 			return CONVERSION_ERROR;
 		}
 
-		single_int |= _str[str_pos - 1]- character_range_start;
-		cout << single_int<<endl;
-		no_of_bytes++;
-		if (no_of_bytes == 8)
+		//single_int |= _str[str_pos - 1]- character_range_start;
+		single_int = single_int | ((_str[str_pos - 1] - character_range_start) << (no_of_nibbles *4));
+		//single_int |= _str[str_pos - 1] - character_range_start;
+		cout << (_str[str_pos - 1] - character_range_start) << endl;
+		no_of_nibbles++;
+		if (no_of_nibbles == 8)
 		{
+			
 			hex_vector.push_back(single_int);
 			single_int = 0;
-			no_of_bytes = 0;
+			no_of_nibbles = 0;
 		}
-		single_int <<= 4;
-		//if (_str[str_pos - 1] >= '0' && _str[str_pos - 1] <= '9')
-		//{
-		//	if (least_nibble) 
-		//	{
-		//		single_byte |= (_str[str_pos - 1] - '0') ;
-		//		least_nibble = !least_nibble;
-		//		if (str_pos - 1 == 0) 
-		//		{
-		//			byte_vector.push_back(single_byte);
-		//		}
-		//	}
-		//	else
-		//	{
-		//		single_byte |= ( (_str[str_pos - 1] - '0') << 4 );
-		//		least_nibble = !least_nibble;
-		//		byte_vector.push_back(single_byte);
-		//		single_byte = 0;
-		//	}	
-		//}
-		//else if ((_str[str_pos - 1] >= 'A' && _str[str_pos - 1] <= 'F'))
-		//{
-		//	if (least_nibble)
-		//	{
-		//		single_byte |= (_str[str_pos - 1] - 'A');
-		//		least_nibble = !least_nibble;
-		//		if (str_pos - 1 == 0)
-		//		{
-		//			byte_vector.push_back(single_byte);
-		//		}
-		//	}
-		//	else
-		//	{
-		//		single_byte |= ((_str[str_pos - 1] - 'A') << 4);
-		//		least_nibble = !least_nibble;
-		//		byte_vector.push_back(single_byte);
-		//		single_byte = 0;
-		//	}
-		//}
-		//else if (_str[str_pos - 1] >= 'a' && _str[str_pos - 1] <= 'f')
-		//{
-		//	if (least_nibble)
-		//	{
-		//		single_byte |= (_str[str_pos - 1] - 'a');
-		//		least_nibble = !least_nibble;
-		//		if (str_pos - 1 == 0)
-		//		{
-		//			byte_vector.push_back(single_byte);
-		//		}
-		//	}
-		//	else
-		//	{
-		//		single_byte |= ((_str[str_pos - 1] - 'a') << 4);
-		//		least_nibble = !least_nibble;
-		//		byte_vector.push_back(single_byte);
-		//		single_byte = 0;
-		//	}
-		//}
-		//else
-		//{
-		//	cout << "Error: Wrong Hex Digit." << endl;
-		//	return CONVERSION_ERROR;
-		//}
+		//single_int <<= 4;
 	}
 
 	//removing extra zeroes generated on the left of the number 0011 -> 11 
@@ -272,22 +208,28 @@ char ConvertStringToByteArray::ConvertToBin(int* _internal_num, int& _internal_n
 	cout << __FUNCTION__ << endl;
 	if (_result_buf_Length == NULL)
 	{
-		_result_buf_Length = _internal_num_length*32;
+		_result_buf_Length = _internal_num_length*32 ;
 		return CONVERSION_ERROR;
 	}
 	else if (_result_buf_Length < _internal_num_length)
 	{
-		_result_buf_Length = _internal_num_length;
+		_result_buf_Length = _internal_num_length*32 ;
 		return CONVERSION_ERROR;
 	}
 	else
 	{
 		string temp,result_buf;
-		for (int i = _internal_num_length; i > 0; i--)
+		for (int i = _internal_num_length; i >0; i--)
 		{
-			temp = bitset<32> ( _internal_num[i - 1] ).to_string();
+			temp = bitset<32>(_internal_num[i-1 ]).to_string();
 			result_buf.append(temp);
 		}
+		//reverse(result_buf.begin(), result_buf.end());
+		//for (int i = _internal_num_length; i > 0; i--)
+		//{
+		//	temp = bitset<32> ( _internal_num[i - 1] ).to_string();
+		//	result_buf.append(temp);
+		//}
 		int pos = 0;
 		//loop to remove leading zeros
 		while ((result_buf[0] == '0') && (pos < result_buf.size() - 1))
@@ -296,10 +238,6 @@ char ConvertStringToByteArray::ConvertToBin(int* _internal_num, int& _internal_n
 			result_buf.erase(result_buf.begin());
 			pos++;
 		}
-		//for (int j = 0; j < result_buf.size(); j++)
-		//{
-		//	_result_buf[j] = result_buf[j];
-		//}
 		memmove( _result_buf , result_buf.data() , result_buf.size()*sizeof(char) );
 		_result_buf_Length = result_buf.size();
 		return SUCCESS;
@@ -384,6 +322,7 @@ int ConvertStringToByteArray::ToDecimal(int* _internal_num, int& _internal_num_l
 		result_buf.erase(result_buf.begin());
 		pos++;
 	}
+	reverse(result_buf.begin(), result_buf.end());
 	//
 	for (int j = 0; j < result_buf.size(); j++) 
 	{
@@ -563,6 +502,7 @@ int ConvertStringToByteArray::ToHex(int*_internal_num, int& _internal_num_length
 		result_buf.erase(result_buf.begin());
 		pos++;
 	}
+	reverse(result_buf.begin(), result_buf.end());
 	//
 	for (int j = 0; j < result_buf.size(); j++)
 	{
@@ -571,7 +511,6 @@ int ConvertStringToByteArray::ToHex(int*_internal_num, int& _internal_num_length
 	//
 	vector<int> binary_vector;
 	binary_vector.assign(&result_buf[0], &result_buf[result_buf.size()]);
-	//binary_vector.assign(&_internal_num[0], &_internal_num[_internal_num_length]);
 	//
 	string converted_string;
 	size_t remaining_vector_elements;//must be >=4
@@ -597,11 +536,10 @@ int ConvertStringToByteArray::ToHex(int*_internal_num, int& _internal_num_length
 		}
 		else
 		{
-			temp_hex_char =
-				(binary_vector[vector_pos + 0]	  ) +
-				(binary_vector[vector_pos + 1] * 2) +
-				(binary_vector[vector_pos + 2] * 4) +
-				(binary_vector[vector_pos + 3] * 8) ;
+			temp_hex_char =	(binary_vector[vector_pos + 0]	  ) +
+							(binary_vector[vector_pos + 1] * 2) +
+							(binary_vector[vector_pos + 2] * 4) +
+							(binary_vector[vector_pos + 3] * 8) ;
 		}
 		//
 		if (temp_hex_char >= 0 && temp_hex_char < 10)
