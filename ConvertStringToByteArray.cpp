@@ -7,14 +7,12 @@ ConvertStringToByteArray::ConvertStringToByteArray()
 {
 
 }
-
 ConvertStringToByteArray::~ConvertStringToByteArray()
 {
 
 }
 
 /////////////////////////////////////////////////////////////////////
-
 void ConvertStringToByteArray::ConvertToInternal(const char * _str, int _str_num_length, int *& _result_buf, int & _result_buf_length, CONVERT_TYPES _type)
 {
 	cout << __FUNCTION__ << endl;
@@ -44,22 +42,28 @@ char ConvertStringToByteArray::ToInternalFromBin(const char * _str, int _str_num
 	int no_of_bits = 0;
 	int current_bit = 0;
 
-	for (int str_pos = _str_num_length; str_pos > 0 ; str_pos--)
+	//if _str isn't multiple of 32 1st single int is padded with (_str_num_length % 32)
+	if (_str_num_length % 32)
 	{
-		current_bit = _str[str_pos - 1] - '0';
-		cout << _str[str_pos - 1];
-		//current_bit = current_bit << (31 - no_of_bits);
-		current_bit = current_bit << (no_of_bits);
-		single_int = single_int | current_bit;	
+		no_of_bits = 32 - (_str_num_length % 32);
+	}
+
+	for (int str_pos = 0; str_pos <_str_num_length; str_pos++)
+	{
+		current_bit = _str[str_pos] - '0';
+		cout << _str[str_pos];
+		single_int = single_int | current_bit;
 		no_of_bits++;
-		if (no_of_bits == 32 || str_pos == 1)
+		if (no_of_bits == 32)
 		{
 			int_vector.push_back(single_int);
 			single_int = 0;
 			no_of_bits = 0;
 			cout << endl;
 		}
+		single_int = single_int << 1 ;
 	}
+
 	cout << endl;
 	_result_buf = new int[int_vector.size()];
 	memmove(_result_buf, int_vector.data(), int_vector.size() * sizeof(int));
@@ -72,7 +76,7 @@ char ConvertStringToByteArray::ToInternalFromDecimal(const char * _str, int _str
 {
 	cout << __FUNCTION__ << endl;
 	vector<int> decimal_vector;
-	// need to check if the current digit is a vaiable decimal digit
+	// looping to check if the current digit is a vaiable decimal digit
 	for (size_t str_pos = 0; str_pos < _str_num_length; str_pos++)
 	{
 		if (_str[str_pos] >= '0'  && _str[str_pos] <= '9')
@@ -127,18 +131,19 @@ char ConvertStringToByteArray::ToInternalFromHex(const char * _str, int _str_num
 	unsigned int single_int = 0;
 	int no_of_nibbles = 0;
 	unsigned  char character_range_start = 0;
-	// need to check if the current digit is a vaiable hex digit
-	for (int str_pos = _str_num_length; str_pos > 0; str_pos--)
+	// looping to check if current digit in _str is a vaiable hex digit
+	// and concatnate from the hex number string an array of int chunks 
+	for (int str_pos = 0; str_pos <_str_num_length; str_pos++)
 	{
-		if (_str[str_pos - 1] >= '0' && _str[str_pos - 1] <= '9')
+		if (_str[str_pos] >= '0' && _str[str_pos] <= '9')
 		{
 			character_range_start = '0';
 		}
-		else if ((_str[str_pos - 1] >= 'A' && _str[str_pos - 1] <= 'F'))
+		else if ((_str[str_pos] >= 'A' && _str[str_pos] <= 'F'))
 		{
 			character_range_start = 'A'-10;
 		}
-		else if (_str[str_pos - 1] >= 'a' && _str[str_pos - 1] <= 'f')
+		else if (_str[str_pos] >= 'a' && _str[str_pos] <= 'f')
 		{
 			character_range_start = 'a'-10;
 		}
@@ -147,21 +152,18 @@ char ConvertStringToByteArray::ToInternalFromHex(const char * _str, int _str_num
 			return CONVERSION_ERROR;
 		}
 
-		//single_int |= _str[str_pos - 1]- character_range_start;
-		single_int = single_int | ((_str[str_pos - 1] - character_range_start) << (no_of_nibbles *4));
-		//single_int |= _str[str_pos - 1] - character_range_start;
-		cout << (_str[str_pos - 1] - character_range_start) << endl;
+		//single_int = single_int | ( (_str[str_pos - 1] - character_range_start) << (no_of_nibbles *4) );
+		single_int = single_int | ( (_str[str_pos] - character_range_start) );
+		//cout << (_str[str_pos - 1] - character_range_start) << endl;
 		no_of_nibbles++;
 		if (no_of_nibbles == 8)
-		{
-			
+		{	
 			hex_vector.push_back(single_int);
 			single_int = 0;
 			no_of_nibbles = 0;
 		}
-		//single_int <<= 4;
+		single_int <<= 4;
 	}
-
 	//removing extra zeroes generated on the left of the number 0011 -> 11 
 	for (size_t i = hex_vector.size(); i > 1; i--)
 	{
@@ -180,7 +182,6 @@ char ConvertStringToByteArray::ToInternalFromHex(const char * _str, int _str_num
 	_result_buf_length = static_cast<int>(hex_vector.size());
 	return SUCCESS;
 }
-
 /////////////////////////////////////////////////////////////////////
 
 void ConvertStringToByteArray::ConvertToString(int* _num, int& _num_length, char* _result_buf, int& _result_buf_Length, CONVERT_TYPES _type)
@@ -219,9 +220,9 @@ char ConvertStringToByteArray::ConvertToBin(int* _internal_num, int& _internal_n
 	else
 	{
 		string temp,result_buf;
-		for (int i = _internal_num_length; i >0; i--)
+		for (int i = 0; i <_internal_num_length; i++)
 		{
-			temp = bitset<32>(_internal_num[i-1 ]).to_string();
+			temp = bitset<32>(_internal_num[i]).to_string();
 			result_buf.append(temp);
 		}
 		//reverse(result_buf.begin(), result_buf.end());
@@ -488,9 +489,9 @@ char ConvertStringToByteArray::ConvertToHex(int*_internal_num, int& _internal_nu
 int ConvertStringToByteArray::ToHex(int*_internal_num, int& _internal_num_length, char* _result_buf, int& _result_buf_Length)
 {
 	string temp, result_buf;
-	for (int i = _internal_num_length; i > 0; i--)
+	for (int i = 0; i < _internal_num_length; i++)
 	{
-		temp = bitset<32>(_internal_num[i - 1]).to_string();
+		temp = bitset<32>(_internal_num[i]).to_string();
 		result_buf.append(temp);
 	}
 	//
