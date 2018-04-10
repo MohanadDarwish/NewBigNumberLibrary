@@ -127,6 +127,10 @@ char ConvertStringToByteArray::ToInternalFromHex(const char * _str, int _str_num
 	vector<int> hex_vector;
 	unsigned int single_int = 0;
 	int no_of_nibbles = 0;
+	if (_str_num_length % 8) 
+	{
+		no_of_nibbles = 8 - (_str_num_length % 8);
+	}
 	unsigned  char character_range_start = 0;
 	// looping to check if current digit in _str is a vaiable hex digit
 	// and concatnate from the hex number string an array of int chunks 
@@ -477,19 +481,21 @@ char ConvertStringToByteArray::ConvertToHex(int*_internal_num, int& _internal_nu
 int ConvertStringToByteArray::ToHex(int*_internal_num, int& _internal_num_length, char* _result_buf, int& _result_buf_Length)
 {
 	string converted_string;
+	int* temp_internal_hex_data = new int[_internal_num_length]();
+	memmove(temp_internal_hex_data, _internal_num, (_internal_num_length-1)*sizeof(int));
 	int no_of_nibbles=0;
 	int hex_digit_mask = 0x0000000f;
 	for (int i = _internal_num_length; i >0 ;)
 	{
-		if ((_internal_num[i-1] & hex_digit_mask) < 10)
+		if ((temp_internal_hex_data[i-1] & hex_digit_mask) < 10)
 		{
-			converted_string.push_back((_internal_num[i-1] & hex_digit_mask) + '0');
+			converted_string.push_back((temp_internal_hex_data[i-1] & hex_digit_mask) + '0');
 		}
 		else
 		{
-			converted_string.push_back( (_internal_num[i-1] & hex_digit_mask) + ('A'-10) );
+			converted_string.push_back( (temp_internal_hex_data[i-1] & hex_digit_mask) + ('A'-10) );
 		}
-		_internal_num[i-1] >>= 4;
+		temp_internal_hex_data[i-1] >>= 4;
 		no_of_nibbles++;
 		if (no_of_nibbles == 8)
 		{
@@ -503,6 +509,7 @@ int ConvertStringToByteArray::ToHex(int*_internal_num, int& _internal_num_length
 		memmove(_result_buf, converted_string.data(), (converted_string.size() * sizeof(char)));
 	}
 	_result_buf_Length = static_cast<int>(converted_string.size());
+	delete[](temp_internal_hex_data);
 	return _result_buf_Length;
 }
 

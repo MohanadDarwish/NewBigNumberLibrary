@@ -90,3 +90,28 @@ void BigNumber::ConvertToStringFromByteArray(char* _result_buf, int & _result_bu
 
 	conv_ptr->ConvertToString(internal_byte_data, internal_byte_data_length, _result_buf, _result_buf_Length, _type);
 }
+BigNumber BigNumber::operator+(const BigNumber & _right_operand)
+{
+	BigNumber* result = new BigNumber();
+	unsigned int result_int_element_number = 0;
+	unsigned long long temp_result = 0;
+	unsigned int carry = 0;
+	result->internal_byte_data = new int[this->internal_byte_data_length + _right_operand.internal_byte_data_length]();
+	result->internal_byte_data_length = this->internal_byte_data_length + _right_operand.internal_byte_data_length;
+	for (int int_number = this->internal_byte_data_length; int_number >0 ; int_number--)
+	{
+		 temp_result = this->internal_byte_data[int_number-1] + _right_operand.internal_byte_data[int_number-1] + carry;
+
+		 result->internal_byte_data[result_int_element_number] = (unsigned int)temp_result;
+
+		 carry = ((temp_result)>>31) & 1;
+
+		 result->internal_byte_data[result_int_element_number + 1] = carry;
+
+		 result_int_element_number++;
+
+		 temp_result = 0;
+	}
+
+	return *result;
+}

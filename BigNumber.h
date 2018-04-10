@@ -33,6 +33,7 @@ public:
 
 	void Print_Internal_data(void);
 	void Print_Internal_byte_data(void);
+	BigNumber operator+(const BigNumber & _right_operand);
 
 private:
 	//this internal data should holds values of 1s or 0s each 1/0 is in an int
