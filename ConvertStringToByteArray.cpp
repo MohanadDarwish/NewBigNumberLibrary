@@ -102,9 +102,9 @@ char ConvertStringToByteArray::ToInternalFromDecimal(const char * _str, int _str
 	vector<int>internal_int_vector;
 	int single_int = 0;
 	int No_of_Bytes = 0;
-	for (int i = 0; i < byte_vector.size(); i++)
+	for (int i = byte_vector.size(); i >0; i--)
 	{
-		single_int = single_int | (byte_vector[i]<<(No_of_Bytes*8));
+		single_int = single_int | (byte_vector[i-1]);
 		No_of_Bytes++;
 		if (No_of_Bytes == 4)
 		{
@@ -112,10 +112,7 @@ char ConvertStringToByteArray::ToInternalFromDecimal(const char * _str, int _str
 			No_of_Bytes = 0;
 			single_int = 0;
 		}
-		if (i == byte_vector.size() - 1)
-		{
-			break;
-		}
+		single_int <<= 8;
 	}
 	cout << "result of ConvertStringToNumberArray::ConvertToInternal: " << endl;
 	_result_buf = new int[internal_int_vector.size()];
@@ -151,10 +148,7 @@ char ConvertStringToByteArray::ToInternalFromHex(const char * _str, int _str_num
 		{
 			return CONVERSION_ERROR;
 		}
-
-		//single_int = single_int | ( (_str[str_pos - 1] - character_range_start) << (no_of_nibbles *4) );
 		single_int = single_int | ( (_str[str_pos] - character_range_start) );
-		//cout << (_str[str_pos - 1] - character_range_start) << endl;
 		no_of_nibbles++;
 		if (no_of_nibbles == 8)
 		{	
@@ -225,12 +219,6 @@ char ConvertStringToByteArray::ConvertToBin(int* _internal_num, int& _internal_n
 			temp = bitset<32>(_internal_num[i]).to_string();
 			result_buf.append(temp);
 		}
-		//reverse(result_buf.begin(), result_buf.end());
-		//for (int i = _internal_num_length; i > 0; i--)
-		//{
-		//	temp = bitset<32> ( _internal_num[i - 1] ).to_string();
-		//	result_buf.append(temp);
-		//}
 		int pos = 0;
 		//loop to remove leading zeros
 		while ((result_buf[0] == '0') && (pos < result_buf.size() - 1))
@@ -309,9 +297,9 @@ size_t ConvertStringToByteArray::Convert_String_to_Decimal_vector(int* _str, int
 int ConvertStringToByteArray::ToDecimal(int* _internal_num, int& _internal_num_length, char*& _result_buf, int& _result_buf_Length)
 {
 	string temp, result_buf;
-	for (int i = _internal_num_length; i > 0; i--)
+	for (int i = 0; i <_internal_num_length; i++)
 	{
-		temp = bitset<32>(_internal_num[i - 1]).to_string();
+		temp = bitset<32>(_internal_num[i]).to_string();
 		result_buf.append(temp);
 	}
 	//
@@ -488,76 +476,28 @@ char ConvertStringToByteArray::ConvertToHex(int*_internal_num, int& _internal_nu
 
 int ConvertStringToByteArray::ToHex(int*_internal_num, int& _internal_num_length, char* _result_buf, int& _result_buf_Length)
 {
-	string temp, result_buf;
-	for (int i = 0; i < _internal_num_length; i++)
-	{
-		temp = bitset<32>(_internal_num[i]).to_string();
-		result_buf.append(temp);
-	}
-	//
-	int pos = 0;
-	//loop to remove leading zeros
-	while ((result_buf[0] == '0') && (pos < result_buf.size() - 1))
-	{
-		if (result_buf[0] == '1') break;
-		result_buf.erase(result_buf.begin());
-		pos++;
-	}
-	reverse(result_buf.begin(), result_buf.end());
-	//
-	for (int j = 0; j < result_buf.size(); j++)
-	{
-		result_buf[j] -= '0';
-	}
-	//
-	vector<int> binary_vector;
-	binary_vector.assign(&result_buf[0], &result_buf[result_buf.size()]);
-	//
 	string converted_string;
-	size_t remaining_vector_elements;//must be >=4
-	char temp_hex_char = 0;
-	//
-	for (size_t vector_pos = 0; vector_pos < binary_vector.size(); vector_pos += 4)
+	int no_of_nibbles=0;
+	int hex_digit_mask = 0x0000000f;
+	for (int i = _internal_num_length; i >0 ;)
 	{
-		remaining_vector_elements = binary_vector.size() - vector_pos;
-		if (remaining_vector_elements < 4)
+		if ((_internal_num[i-1] & hex_digit_mask) < 10)
 		{
-			for (size_t i = 0; i < remaining_vector_elements; i++)
-			{
-				if (i == 0)
-				{
-					temp_hex_char += (binary_vector[vector_pos]);
-				}
-				else
-				{
-					temp_hex_char += (binary_vector[vector_pos + i] * (i * 2));
-				}
-			}
-			vector_pos = binary_vector.size();
+			converted_string.push_back((_internal_num[i-1] & hex_digit_mask) + '0');
 		}
 		else
 		{
-			temp_hex_char =	(binary_vector[vector_pos + 0]	  ) +
-							(binary_vector[vector_pos + 1] * 2) +
-							(binary_vector[vector_pos + 2] * 4) +
-							(binary_vector[vector_pos + 3] * 8) ;
+			converted_string.push_back( (_internal_num[i-1] & hex_digit_mask) + ('A'-10) );
 		}
-		//
-		if (temp_hex_char >= 0 && temp_hex_char < 10)
+		_internal_num[i-1] >>= 4;
+		no_of_nibbles++;
+		if (no_of_nibbles == 8)
 		{
-			temp_hex_char += '0';
+			i--;
+			no_of_nibbles = 0;
 		}
-		else
-		{
-			temp_hex_char = (temp_hex_char - 10) + 'A';
-		}
-		//
-		converted_string.insert(converted_string.begin(), temp_hex_char);
-		temp_hex_char = 0;
 	}
-	//adding the null character '\0' to the end of the char array
-	converted_string.push_back(0);
-
+	reverse(converted_string.begin(), converted_string.end());
 	if (_result_buf != NULL)
 	{
 		memmove(_result_buf, converted_string.data(), (converted_string.size() * sizeof(char)));
