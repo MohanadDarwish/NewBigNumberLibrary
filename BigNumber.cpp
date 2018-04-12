@@ -96,21 +96,21 @@ BigNumber BigNumber::operator+(const BigNumber & _right_operand)
 	unsigned int result_int_element_number = 0;
 	unsigned long long temp_result = 0;
 	unsigned int carry = 0;
-	result->internal_byte_data = new int[this->internal_byte_data_length + _right_operand.internal_byte_data_length]();
-	result->internal_byte_data_length = this->internal_byte_data_length + _right_operand.internal_byte_data_length;
-	for (int int_number = this->internal_byte_data_length; int_number >0 ; int_number--)
+	int result_size = 0;
+	(this->internal_byte_data_length > _right_operand.internal_byte_data_length) ? (result_size = this->internal_byte_data_length + 1) : (result_size = _right_operand.internal_byte_data_length);
+	result->internal_byte_data = new int[result_size]();
+	result->internal_byte_data_length = result_size;
+	
+	for (int int_number = 0; int_number <result_size; int_number++)
 	{
-		 temp_result = this->internal_byte_data[int_number-1] + _right_operand.internal_byte_data[int_number-1] + carry;
+		temp_result = this->internal_byte_data[int_number] + _right_operand.internal_byte_data[int_number];
+		temp_result += carry;
 
-		 result->internal_byte_data[result_int_element_number] = (unsigned int)temp_result;
-
-		 carry = ((temp_result)>>31) & 1;
-
-		 result->internal_byte_data[result_int_element_number + 1] = carry;
-
-		 result_int_element_number++;
-
-		 temp_result = 0;
+		result->internal_byte_data[result_int_element_number] = (unsigned int)temp_result;
+		carry = ((temp_result)>>31) & 1;
+		result->internal_byte_data[result_int_element_number + 1] = carry;
+		result_int_element_number++;
+		temp_result = 0;
 	}
 
 	return *result;

@@ -65,6 +65,9 @@ char ConvertStringToByteArray::ToInternalFromBin(const char * _str, int _str_num
 	}
 
 	cout << endl;
+
+	reverse(int_vector.begin(), int_vector.end());
+
 	_result_buf = new int[int_vector.size()];
 	memmove(_result_buf, int_vector.data(), int_vector.size() * sizeof(int));
 	_result_buf_length = static_cast<int>(int_vector.size());
@@ -115,6 +118,9 @@ char ConvertStringToByteArray::ToInternalFromDecimal(const char * _str, int _str
 		single_int <<= 8;
 	}
 	cout << "result of ConvertStringToNumberArray::ConvertToInternal: " << endl;
+	
+	reverse(internal_int_vector.begin(), internal_int_vector.end());
+
 	_result_buf = new int[internal_int_vector.size()];
 	memmove(_result_buf, internal_int_vector.data(), internal_int_vector.size() * sizeof(int));
 	_result_buf_length = static_cast<int>(internal_int_vector.size());
@@ -175,6 +181,8 @@ char ConvertStringToByteArray::ToInternalFromHex(const char * _str, int _str_num
 		}
 	}
 	
+	reverse(hex_vector.begin(), hex_vector.end());
+
 	_result_buf = new int[hex_vector.size()];
 	memmove(_result_buf, hex_vector.data(), hex_vector.size() * sizeof(int));
 	_result_buf_length = static_cast<int>(hex_vector.size());
@@ -218,9 +226,9 @@ char ConvertStringToByteArray::ConvertToBin(int* _internal_num, int& _internal_n
 	else
 	{
 		string temp,result_buf;
-		for (int i = 0; i <_internal_num_length; i++)
+		for (int i = _internal_num_length; i > 0; i--)
 		{
-			temp = bitset<32>(_internal_num[i]).to_string();
+			temp = bitset<32>(_internal_num[i-1]).to_string();
 			result_buf.append(temp);
 		}
 		int pos = 0;
@@ -315,7 +323,7 @@ int ConvertStringToByteArray::ToDecimal(int* _internal_num, int& _internal_num_l
 		result_buf.erase(result_buf.begin());
 		pos++;
 	}
-	reverse(result_buf.begin(), result_buf.end());
+	//reverse(result_buf.begin(), result_buf.end());
 	//
 	for (int j = 0; j < result_buf.size(); j++) 
 	{
@@ -482,28 +490,31 @@ int ConvertStringToByteArray::ToHex(int*_internal_num, int& _internal_num_length
 {
 	string converted_string;
 	int* temp_internal_hex_data = new int[_internal_num_length]();
-	memmove(temp_internal_hex_data, _internal_num, (_internal_num_length-1)*sizeof(int));
+	memmove(temp_internal_hex_data, _internal_num, (_internal_num_length)*sizeof(int));
 	int no_of_nibbles=0;
 	int hex_digit_mask = 0x0000000f;
-	for (int i = _internal_num_length; i >0 ;)
+	for (int i = 0 ; i <_internal_num_length; )
 	{
-		if ((temp_internal_hex_data[i-1] & hex_digit_mask) < 10)
+		if ((temp_internal_hex_data[i] & hex_digit_mask) < 10)
 		{
-			converted_string.push_back((temp_internal_hex_data[i-1] & hex_digit_mask) + '0');
+			converted_string.push_back((temp_internal_hex_data[i] & hex_digit_mask) + '0');
 		}
 		else
 		{
-			converted_string.push_back( (temp_internal_hex_data[i-1] & hex_digit_mask) + ('A'-10) );
+			converted_string.push_back( (temp_internal_hex_data[i] & hex_digit_mask) + ('A'-10) );
 		}
-		temp_internal_hex_data[i-1] >>= 4;
+		temp_internal_hex_data[i] >>= 4;
 		no_of_nibbles++;
 		if (no_of_nibbles == 8)
 		{
-			i--;
+			i++;
 			no_of_nibbles = 0;
 		}
 	}
 	reverse(converted_string.begin(), converted_string.end());
+	
+	converted_string.push_back(0);
+
 	if (_result_buf != NULL)
 	{
 		memmove(_result_buf, converted_string.data(), (converted_string.size() * sizeof(char)));
